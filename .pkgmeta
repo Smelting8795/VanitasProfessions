@@ -1,0 +1,9 @@
+package-as: VanitasProfessions
+
+enable-nolib-creation: no
+
+ignore:
+  - README.md
+  - CHANGELOG.md
+  - .github
+  - .pkgmeta

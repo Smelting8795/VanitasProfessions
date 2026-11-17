@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: VanitasProfessions
+## Notes: Made by Tyska for Vanitas Guild EU WoW Forever PvP
+## Author: Tyska
+## Version: @project-version@
+## X-Curse-Project-ID: 000000
+## SavedVariables: VanitasProfessionsDB
+
+VanitasProfessions.lua
