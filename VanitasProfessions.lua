@@ -497,6 +497,8 @@ local function GetLine(f, i)
         b.bg:SetTexture("Interface\\Buttons\\WHITE8X8")
         b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         b.fs:SetJustifyH("LEFT")
+        b.fs2 = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        b.fs2:SetJustifyH("LEFT")
         b:SetScript("OnEnter", function(self)
             if not self.tipKind then return end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -550,22 +552,40 @@ function RefreshUI()
 
     local st = { y = -4, n = 0 }
 
+    local col2X = math.floor(w * 0.46)
+
     local function line(opts)
         st.n = st.n + 1
         local b = GetLine(f, st.n)
         local indent = opts.indent or 8
         b.fs:ClearAllPoints()
         b.fs:SetPoint("TOPLEFT", b, "TOPLEFT", indent, -2)
-        b.fs:SetWidth(w - indent - 10)
-        b.fs:SetText(opts.text)
-        b.plain = opts.text
-        b.baseAlpha = opts.header and 0.06 or 0
-        b.bg:SetVertexColor(1, 1, 1, b.baseAlpha)
         b.tipKind = opts.tipKind
         b.recipeID = opts.recipeID
         b.itemID = opts.itemID
+
+        if opts.col2 then
+            b.fs:SetWidth(col2X - indent - 8)
+            b.fs:SetText(opts.text)
+            b.fs2:ClearAllPoints()
+            b.fs2:SetPoint("TOPLEFT", b, "TOPLEFT", col2X, -2)
+            b.fs2:SetWidth(w - col2X - 10)
+            b.fs2:SetText(opts.col2)
+            b.fs2:Show()
+        else
+            b.fs:SetWidth(w - indent - 10)
+            b.fs:SetText(opts.text)
+            b.fs2:SetText("")
+            b.fs2:Hide()
+        end
+
+        b.plain = opts.text
+        b.baseAlpha = opts.header and 0.06 or 0
+        b.bg:SetVertexColor(1, 1, 1, b.baseAlpha)
         if opts.tipKind then b:EnableMouse(true) else b:EnableMouse(false) end
-        local h = math.max(b.fs:GetStringHeight(), 1) + (opts.header and 10 or 7)
+
+        local hh = math.max(b.fs:GetStringHeight(), opts.col2 and b.fs2:GetStringHeight() or 0, 1)
+        local h = hh + (opts.header and 10 or 6)
         b:ClearAllPoints()
         b:SetPoint("TOPLEFT", 0, st.y)
         b:SetPoint("TOPRIGHT", 0, st.y)
@@ -614,16 +634,21 @@ function RefreshUI()
         for _, key in ipairs(SortedKeys()) do
             if nameMatches(key) then
                 local data = roster[key]
-                local profStrings = {}
+                local matched = {}
                 for _, p in ipairs(data.professions) do
                     if profText == "" or p.name:lower():find(profText, 1, true) then
-                        profStrings[#profStrings + 1] =
-                            string.format("%s |cffffd100%d|r/%d", p.name, p.skill, p.max)
+                        matched[#matched + 1] = p
                     end
                 end
-                if #profStrings > 0 then
+                if #matched > 0 then
                     line{ text = "|cff8e7cc3" .. ShortName(key) .. "|r", header = true }
-                    line{ text = table.concat(profStrings, SEP), indent = 22 }
+                    for _, p in ipairs(matched) do
+                        line{
+                            text = p.name,
+                            col2 = string.format("|cffffd100%d|r/%d", p.skill, p.max),
+                            indent = 24,
+                        }
+                    end
                 end
             end
         end

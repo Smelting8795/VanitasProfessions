@@ -6,6 +6,8 @@
   shown under your name.
 - Never caches a profession you do not actually have.
 - Self-heal on login removes any profession that was stored by mistake.
+- Cleaner profession list: one profession per line with skill values aligned in a
+  column, instead of one long wrapped line.
 
 ## 1.0.0
 
