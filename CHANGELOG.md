@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- Fixed recipes from a linked, guild or NPC trade skill being wrongly stored and
+  shown under your name.
+- Never caches a profession you do not actually have.
+- Self-heal on login removes any profession that was stored by mistake.
+
 ## 1.0.0
 
 - First release.

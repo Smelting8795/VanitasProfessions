@@ -3,7 +3,7 @@
 local ADDON_NAME = ...
 local PREFIX     = "VanitasProf"
 local PROTOCOL   = 1
-local DB_VERSION = 5
+local DB_VERSION = 6
 
 VanitasProfessionsDB = VanitasProfessionsDB or {}
 
@@ -211,6 +211,14 @@ end
 local function ScanTradeSkill()
     local prof, list
 
+    if C_TradeSkillUI then
+        if (C_TradeSkillUI.IsTradeSkillLinked and C_TradeSkillUI.IsTradeSkillLinked())
+            or (C_TradeSkillUI.IsTradeSkillGuild and C_TradeSkillUI.IsTradeSkillGuild())
+            or (C_TradeSkillUI.IsNPCCrafting and C_TradeSkillUI.IsNPCCrafting()) then
+            return
+        end
+    end
+
     if GetTradeSkillLine and GetNumTradeSkills and GetTradeSkillInfo then
         local p = GetTradeSkillLine()
         if p and p ~= "" and p ~= "UNKNOWN" and (GetNumTradeSkills() or 0) > 0 then
@@ -274,6 +282,16 @@ local function ScanTradeSkill()
     end
 
     if not list then return end
+
+    local myProfs = ScanMyProfessions()
+    if prof and KNOWN_PROFESSIONS[prof:lower()] and #myProfs > 0 then
+        local have = false
+        for _, p in ipairs(myProfs) do
+            if p.name:lower() == prof:lower() then have = true; break end
+        end
+        if not have then return end
+    end
+
     if sameRecipeList(myCraftables[prof], list) then return end
 
     myCraftables[prof] = list
@@ -716,6 +734,18 @@ ev:SetScript("OnEvent", function(_, event, ...)
         end
 
         After(5, function()
+            local known = {}
+            for _, p in ipairs(ScanMyProfessions()) do known[p.name:lower()] = true end
+            local changed = false
+            for prof in pairs(myCraftables) do
+                if KNOWN_PROFESSIONS[prof:lower()] and not known[prof:lower()] then
+                    myCraftables[prof] = nil
+                    local me = roster[MyFullName()]
+                    if me and me.craftables then me.craftables[prof] = nil end
+                    changed = true
+                end
+            end
+            if changed then VanitasProfessionsDB.myCraftables = myCraftables end
             RequestAll()
             Broadcast()
             BroadcastAllCraftables()
