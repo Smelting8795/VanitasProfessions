@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- Fixed members showing up twice when their realm suffix arrived inconsistently.
+  Characters are now keyed by name only (unique within a guild), so no duplicates.
+
 ## 1.0.1
 
 - Fixed recipes from a linked, guild or NPC trade skill being wrongly stored and

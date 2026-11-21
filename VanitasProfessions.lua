@@ -3,7 +3,7 @@
 local ADDON_NAME = ...
 local PREFIX     = "VanitasProf"
 local PROTOCOL   = 1
-local DB_VERSION = 6
+local DB_VERSION = 7
 
 VanitasProfessionsDB = VanitasProfessionsDB or {}
 
@@ -39,12 +39,8 @@ end
 
 local function CanonKey(raw)
     if not raw or raw == "" then return raw end
-    local name, realm = raw:match("^(.-)%-(.*)$")
-    if not name then name, realm = raw, "" end
-    local first = name:match("^%S+") or name
-    realm = (realm ~= "" and realm or (GetRealmName() or "")):gsub("%s+", "")
-    if realm == "" then return first end
-    return first .. "-" .. realm
+    local namePart = raw:match("^([^-]+)") or raw
+    return namePart:match("^%S+") or namePart
 end
 
 local function MyFullName() return CanonKey(UnitName("player")) end
