@@ -2,8 +2,8 @@
 
 local ADDON_NAME = ...
 local PREFIX     = "VanitasProf"
-local PROTOCOL   = 1
-local DB_VERSION = 7
+local PROTOCOL   = 2
+local DB_VERSION = 8
 
 VanitasProfessionsDB = VanitasProfessionsDB or {}
 
@@ -37,15 +37,15 @@ for _, n in ipairs({
     KNOWN_PROFESSIONS[n:lower()] = true
 end
 
-local function CanonKey(raw)
+local function CleanName(raw)
     if not raw or raw == "" then return raw end
     local namePart = raw:match("^([^-]+)") or raw
-    return namePart:match("^%S+") or namePart
+    namePart = namePart:gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", " ")
+    return namePart
 end
 
-local function MyFullName() return CanonKey(UnitName("player")) end
-local function KeyFor(sender) return CanonKey(sender) end
-local function ShortName(key) return key:match("^[^-]+") or key end
+local function MyFullName() return CleanName(UnitName("player")) end
+local function ShortName(key) return key or "" end
 
 local function Entry(key)
     local e = roster[key]
@@ -133,7 +133,7 @@ local function Broadcast()
     local e = Entry(MyFullName())
     e.professions = profs
     e.updated = time()
-    SendAddon(PREFIX, PROTOCOL .. "|U|" .. Serialize(profs), "GUILD")
+    SendAddon(PREFIX, PROTOCOL .. "|U|" .. MyFullName() .. "|" .. Serialize(profs), "GUILD")
     RefreshIfShown()
 end
 
@@ -157,7 +157,7 @@ local function BroadcastCraftables(prof)
 
     local total = #chunks
     for idx, payload in ipairs(chunks) do
-        Enqueue(PROTOCOL .. "|C|" .. prof .. "|" .. idx .. "|" .. total .. "|" .. payload)
+        Enqueue(PROTOCOL .. "|C|" .. MyFullName() .. "|" .. prof .. "|" .. idx .. "|" .. total .. "|" .. payload)
     end
 end
 
@@ -349,9 +349,10 @@ local function OnAddonMessage(prefix, text, _, sender)
     if not proto or tonumber(proto) ~= PROTOCOL then return end
 
     if mtype == "U" then
-        local key = KeyFor(sender)
-        local e = Entry(key)
-        e.professions = Deserialize(payload)
+        local fullname, profdata = payload:match("^([^|]*)|(.*)$")
+        if not fullname or fullname == "" then fullname, profdata = sender, payload end
+        local e = Entry(CleanName(fullname))
+        e.professions = Deserialize(profdata)
         e.updated = time()
         RefreshIfShown()
 
@@ -362,11 +363,11 @@ local function OnAddonMessage(prefix, text, _, sender)
         end)
 
     elseif mtype == "C" then
-        local prof, idx, total, names = string.match(payload, "^([^|]+)|(%d+)|(%d+)|(.*)$")
-        if not prof then return end
+        local fullname, prof, idx, total, names = string.match(payload, "^([^|]+)|([^|]+)|(%d+)|(%d+)|(.*)$")
+        if not fullname then return end
         idx, total = tonumber(idx), tonumber(total)
 
-        local key = KeyFor(sender)
+        local key = CleanName(fullname)
         craftBuffer[key] = craftBuffer[key] or {}
         local buf = craftBuffer[key][prof]
         if not buf or buf.total ~= total then

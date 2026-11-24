@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- Members are now identified by their full name (first and last), so guild members
+  who share a first name are told apart. The full name is sent in the message since
+  the addon channel only carries the first name. Everyone must update to 1.0.3.
+
 ## 1.0.2
 
 - Fixed members showing up twice when their realm suffix arrived inconsistently.
